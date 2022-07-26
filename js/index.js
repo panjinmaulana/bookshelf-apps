@@ -28,9 +28,9 @@ document.addEventListener(RENDER_EVENT, function () {
     };
 });
 
-// document.addEventListener(SAVED_EVENT, function () {
-//     console.log(localStorage.getItem(STORAGE_KEY));
-// });
+document.addEventListener(SAVED_EVENT, function () {
+    console.log(localStorage.getItem(STORAGE_KEY));
+});
 
 function generateId() {
     return +new Date();
@@ -73,6 +73,7 @@ function addBook() {
     books.push(bookObject);
 
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 }
 
 function makeBook(bookObject) {
@@ -160,6 +161,7 @@ function addTaskToCompleted(bookId) {
 
     bookTarget.isComplete = true;
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 };
 
 function removeTaskFromCompleted(bookId) {
@@ -169,6 +171,7 @@ function removeTaskFromCompleted(bookId) {
 
     books.splice(bookTarget, 1);
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 };
 
 function undoTaskFromCompleted(bookId) {
@@ -178,4 +181,5 @@ function undoTaskFromCompleted(bookId) {
 
     bookTarget.isComplete = false;
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 };
