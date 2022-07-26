@@ -15,11 +15,16 @@ document.addEventListener(RENDER_EVENT, function () {
     const incompleteBookshelfList = document.getElementById('incompleteBookshelfList');
     incompleteBookshelfList.innerHTML = '';
 
+    const completeBookshelfList = document.getElementById('completeBookshelfList');
+    completeBookshelfList.innerHTML = '';
+
     for (const bookItem of books) {
         const bookElement = makeBook(bookItem);
-        if (!bookItem.isCompleted) {
+        if (!bookItem.isComplete) {
             incompleteBookshelfList.append(bookElement);
-        }
+        } else {
+            completeBookshelfList.append(bookElement);
+        };
     };
 });
 
@@ -124,7 +129,7 @@ function makeBook(bookObject) {
         });
 
         action.append(checkButton, trashButton);
-    }
+    };
 
     return article;
 };
@@ -133,30 +138,44 @@ function findBook(bookId) {
     for (const bookItem of books) {
         if (bookItem.id === bookId) {
             return bookItem;
-        }
-    }
+        };
+    };
     return null;
-}
+};
+
+function findBookIndex(bookId) {
+    for (const index in books) {
+        if (books[index].id === bookId) {
+            return index;
+        };
+    };
+
+    return -1;
+};
 
 function addTaskToCompleted(bookId) {
     const bookTarget = findBook(bookId);
 
     if (bookTarget == null) return;
 
-    bookTarget.isCompleted = true;
+    bookTarget.isComplete = true;
     document.dispatchEvent(new Event(RENDER_EVENT));
-}
-
-
-function removeTaskFromCompleted(bookId) {
-    // ...
-    document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
 };
 
+function removeTaskFromCompleted(bookId) {
+    const bookTarget = findBookIndex(bookId);
+
+    if (bookTarget === -1) return;
+
+    books.splice(bookTarget, 1);
+    document.dispatchEvent(new Event(RENDER_EVENT));
+};
 
 function undoTaskFromCompleted(bookId) {
-    // ...
+    const bookTarget = findBook(bookId);
+
+    if (bookTarget == null) return;
+
+    bookTarget.isComplete = false;
     document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
 };
