@@ -12,7 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener(RENDER_EVENT, function () {
-    console.log(books);
+    const incompleteBookshelfList = document.getElementById('incompleteBookshelfList');
+    incompleteBookshelfList.innerHTML = '';
+
+    for (const bookItem of books) {
+        const bookElement = makeBook(bookItem);
+        if (!bookItem.isCompleted) {
+            incompleteBookshelfList.append(bookElement);
+        }
+    };
 });
 
 // document.addEventListener(SAVED_EVENT, function () {
@@ -62,22 +70,92 @@ function addBook() {
     document.dispatchEvent(new Event(RENDER_EVENT));
 }
 
+function makeBook(bookObject) {
+    const title = document.createElement('h3');
+    title.innerText = bookObject.title;
 
-function addTaskToFinishedReading(bookId) {
+    const author = document.createElement('p');
+    author.innerText = `Penulis: ${bookObject.author}`;
+
+    const year = document.createElement('p');
+    year.innerText = `Tahun: ${bookObject.year}`;
+
+    const action = document.createElement('div');
+    action.classList.add('action');
+
+    const article = document.createElement('article');
+    article.classList.add('book_item');
+    article.append(title, author, year, action);
+    article.setAttribute('id', `book-${bookObject.id}`);
+
+    if (bookObject.isComplete) {
+        const undoButton = document.createElement('button');
+        undoButton.classList.add('green');
+        undoButton.innerText = 'Belum selesai dibaca';
+
+        undoButton.addEventListener('click', function () {
+            undoTaskFromCompleted(bookObject.id);
+        });
+
+        const trashButton = document.createElement('button');
+        trashButton.classList.add('red');
+        trashButton.innerText = 'Hapus buku';
+
+        trashButton.addEventListener('click', function () {
+            removeTaskFromCompleted(bookObject.id);
+        });
+
+        action.append(undoButton, trashButton);
+    } else {
+        const checkButton = document.createElement('button');
+        checkButton.classList.add('green');
+        checkButton.innerText = 'Selesai dibaca';
+
+        checkButton.addEventListener('click', function () {
+            addTaskToCompleted(bookObject.id);
+        });
+
+        const trashButton = document.createElement('button');
+        trashButton.classList.add('red');
+        trashButton.innerText = 'Hapus buku';
+
+        trashButton.addEventListener('click', function () {
+            removeTaskFromCompleted(bookObject.id);
+        });
+
+        action.append(checkButton, trashButton);
+    }
+
+    return article;
+};
+
+function findBook(bookId) {
+    for (const bookItem of books) {
+        if (bookItem.id === bookId) {
+            return bookItem;
+        }
+    }
+    return null;
+}
+
+function addTaskToCompleted(bookId) {
+    const bookTarget = findBook(bookId);
+
+    if (bookTarget == null) return;
+
+    bookTarget.isCompleted = true;
+    document.dispatchEvent(new Event(RENDER_EVENT));
+}
+
+
+function removeTaskFromCompleted(bookId) {
     // ...
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
 };
 
 
-function removeTaskFromFinishedReading(bookId) {
-    // ...
-    document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
-};
-
-
-function undoTaskFromFinishedReading(bookId) {
+function undoTaskFromCompleted(bookId) {
     // ...
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
