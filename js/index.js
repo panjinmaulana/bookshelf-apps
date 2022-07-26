@@ -1,10 +1,17 @@
-const books = [];
+let books = [];
 const RENDER_EVENT = 'render-book';
 // const SAVED_EVENT = 'saved-book';
 const STORAGE_KEY = 'BOOKSHELF_APPS';
 
 document.addEventListener('DOMContentLoaded', function () {
     const submitForm = document.getElementById('inputBook');
+    const searchSubmit = document.getElementById('searchBook');
+
+    searchSubmit.addEventListener('submit', function (event) {
+        event.preventDefault();
+        searchBook();
+    });
+
     submitForm.addEventListener('submit', function (event) {
         event.preventDefault();
         addBook();
@@ -16,13 +23,17 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener(RENDER_EVENT, function () {
+    showBook();
+});
+
+function showBook(data) {
     const incompleteBookshelfList = document.getElementById('incompleteBookshelfList');
     incompleteBookshelfList.innerHTML = '';
 
     const completeBookshelfList = document.getElementById('completeBookshelfList');
     completeBookshelfList.innerHTML = '';
 
-    for (const bookItem of books) {
+    for (const bookItem of data ? data : books) {
         const bookElement = makeBook(bookItem);
         if (!bookItem.isComplete) {
             incompleteBookshelfList.append(bookElement);
@@ -30,11 +41,11 @@ document.addEventListener(RENDER_EVENT, function () {
             completeBookshelfList.append(bookElement);
         };
     };
-});
+};
 
-document.addEventListener(SAVED_EVENT, function () {
-    console.log(localStorage.getItem(STORAGE_KEY));
-});
+// document.addEventListener(SAVED_EVENT, function () {
+//     console.log(localStorage.getItem(STORAGE_KEY));
+// });
 
 function generateId() {
     return +new Date();
@@ -78,7 +89,7 @@ function addBook() {
 
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
-}
+};
 
 function makeBook(bookObject) {
     const title = document.createElement('h3');
@@ -146,6 +157,17 @@ function findBook(bookId) {
         };
     };
     return null;
+};
+
+function searchBook() {
+    const titleBook = document.getElementById('searchBookTitle').value;
+
+    const filteredBook = books.filter(bookItem => {
+        if (titleBook) return bookItem.title == titleBook;
+        return bookItem;
+    });
+
+    showBook(filteredBook);
 };
 
 function findBookIndex(bookId) {
