@@ -1,6 +1,5 @@
 let books = [];
 const RENDER_EVENT = 'render-book';
-// const SAVED_EVENT = 'saved-book';
 const STORAGE_KEY = 'BOOKSHELF_APPS';
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -26,6 +25,66 @@ document.addEventListener(RENDER_EVENT, function () {
     showBook();
 });
 
+function generateId() {
+    return +new Date();
+};
+
+function generateBookToObject(id, title, author, year, isComplete) {
+    return {
+        id,
+        title,
+        author,
+        year,
+        isComplete,
+    };
+};
+
+function findBook(bookId) {
+    const found = books.find((element) => element.id == bookId);
+
+    return found;
+};
+
+function searchBook() {
+    const titleBook = document.getElementById('searchBookTitle').value;
+
+    const filteredBook = books.filter(bookItem => {
+        if (titleBook) return bookItem.title == titleBook;
+        return bookItem;
+    });
+
+    showBook(filteredBook);
+};
+
+function isStorageExist() {
+    if (typeof (Storage) === undefined) {
+        alert('Your browser does not support local storage.');
+        return false;
+    };
+
+    return true;
+};
+
+function saveData() {
+    if (isStorageExist()) {
+        const parsed = JSON.stringify(books);
+        localStorage.setItem(STORAGE_KEY, parsed);
+    };
+};
+
+function loadDataFromStorage() {
+    const serializedData = localStorage.getItem(STORAGE_KEY);
+    let data = JSON.parse(serializedData);
+
+    if (data !== null) {
+        for (const book of data) {
+            books.push(book);
+        };
+    };
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+};
+
 function showBook(data) {
     const incompleteBookshelfList = document.getElementById('incompleteBookshelfList');
     incompleteBookshelfList.innerHTML = '';
@@ -41,54 +100,6 @@ function showBook(data) {
             completeBookshelfList.append(bookElement);
         };
     };
-};
-
-// document.addEventListener(SAVED_EVENT, function () {
-//     console.log(localStorage.getItem(STORAGE_KEY));
-// });
-
-function generateId() {
-    return +new Date();
-};
-
-function generateBookToObject(id, title, author, year, isComplete) {
-    return {
-        id,
-        title,
-        author,
-        year,
-        isComplete,
-    };
-};
-
-function isStorageExist() {
-    if (typeof (Storage) === undefined) {
-        alert('Your browser does not support local storage.');
-        return false;
-    };
-    return true;
-};
-
-function saveData() {
-    if (isStorageExist()) {
-        const parsed = JSON.stringify(books);
-        localStorage.setItem(STORAGE_KEY, parsed);
-        // document.dispatchEvent(new Event(SAVED_EVENT));
-    };
-};
-
-function addBook() {
-    const title = document.getElementById('inputBookTitle').value;
-    const author = document.getElementById('inputBookAuthor').value;
-    const year = document.getElementById('inputBookYear').value;
-    const isComplete = document.querySelector('#inputBookIsComplete').checked;
-
-    const generatedID = generateId();
-    const bookObject = generateBookToObject(generatedID, title, author, year, isComplete);
-    books.push(bookObject);
-
-    document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
 };
 
 function makeBook(bookObject) {
@@ -109,116 +120,80 @@ function makeBook(bookObject) {
     article.append(title, author, year, action);
     article.setAttribute('id', `book-${bookObject.id}`);
 
+    const redoButton = document.createElement('button');
+    const undoButton = document.createElement('button');
+
     if (bookObject.isComplete) {
-        const undoButton = document.createElement('button');
         undoButton.classList.add('green');
         undoButton.innerText = 'Belum selesai dibaca';
 
         undoButton.addEventListener('click', function () {
-            undoTaskFromCompleted(bookObject.id);
+            undoTask(bookObject.id);
         });
-
-        const trashButton = document.createElement('button');
-        trashButton.classList.add('red');
-        trashButton.innerText = 'Hapus buku';
-
-        trashButton.addEventListener('click', function () {
-            removeTaskFromCompleted(bookObject.id);
-        });
-
-        action.append(undoButton, trashButton);
     } else {
-        const checkButton = document.createElement('button');
-        checkButton.classList.add('green');
-        checkButton.innerText = 'Selesai dibaca';
+        redoButton.classList.add('green');
+        redoButton.innerText = 'Selesai dibaca';
 
-        checkButton.addEventListener('click', function () {
-            addTaskToCompleted(bookObject.id);
+        redoButton.addEventListener('click', function () {
+            redoTask(bookObject.id);
         });
-
-        const trashButton = document.createElement('button');
-        trashButton.classList.add('red');
-        trashButton.innerText = 'Hapus buku';
-
-        trashButton.addEventListener('click', function () {
-            removeTaskFromCompleted(bookObject.id);
-        });
-
-        action.append(checkButton, trashButton);
     };
+
+    const trashButton = document.createElement('button');
+    trashButton.classList.add('red');
+    trashButton.innerText = 'Hapus buku';
+
+    trashButton.addEventListener('click', function () {
+        removeTask(bookObject.id);
+    });
+
+    action.append(bookObject.isComplete ? undoButton : redoButton, trashButton);
 
     return article;
 };
 
-function findBook(bookId) {
-    for (const bookItem of books) {
-        if (bookItem.id === bookId) {
-            return bookItem;
-        };
-    };
-    return null;
+function addBook() {
+    const title = document.getElementById('inputBookTitle').value;
+    const author = document.getElementById('inputBookAuthor').value;
+    const year = document.getElementById('inputBookYear').value;
+    const isComplete = document.querySelector('#inputBookIsComplete').checked;
+
+    const generatedID = generateId();
+    const bookObject = generateBookToObject(generatedID, title, author, year, isComplete);
+    books.push(bookObject);
+
+    document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 };
 
-function searchBook() {
-    const titleBook = document.getElementById('searchBookTitle').value;
-
-    const filteredBook = books.filter(bookItem => {
-        if (titleBook) return bookItem.title == titleBook;
-        return bookItem;
-    });
-
-    showBook(filteredBook);
-};
-
-function findBookIndex(bookId) {
-    for (const index in books) {
-        if (books[index].id === bookId) {
-            return index;
-        };
-    };
-
-    return -1;
-};
-
-function addTaskToCompleted(bookId) {
+function redoTask(bookId) {
     const bookTarget = findBook(bookId);
 
-    if (bookTarget == null) return;
+    if (!bookTarget) return;
 
     bookTarget.isComplete = true;
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
 };
 
-function removeTaskFromCompleted(bookId) {
-    const bookTarget = findBookIndex(bookId);
-
-    if (bookTarget === -1) return;
-
-    books.splice(bookTarget, 1);
-    document.dispatchEvent(new Event(RENDER_EVENT));
-    saveData();
-};
-
-function undoTaskFromCompleted(bookId) {
+function undoTask(bookId) {
     const bookTarget = findBook(bookId);
 
-    if (bookTarget == null) return;
+    if (!bookTarget) return;
 
     bookTarget.isComplete = false;
     document.dispatchEvent(new Event(RENDER_EVENT));
     saveData();
 };
 
-function loadDataFromStorage() {
-    const serializedData = localStorage.getItem(STORAGE_KEY);
-    let data = JSON.parse(serializedData);
+function removeTask(bookId) {
+    const bookTarget = findBook(bookId);
 
-    if (data !== null) {
-        for (const book of data) {
-            books.push(book);
-        };
+    if (!bookTarget) return;
+
+    for (const [index, value] of books.entries()) {
+        if (value.id == bookTarget.id) books.splice(index, 1);
     };
-
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 };
